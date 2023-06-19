@@ -1,4 +1,4 @@
-<h1 align="center">HolbertonBnB</h1>
+<h1 align="center">AirBnB</h1>
 <p align="center">An AirBnB clone.</p>
 
 <p align="center">
@@ -319,5 +319,4 @@ $ python3 unittest -m tests/test_console.py
 
 ## Authors :black_nib:
 * **KELVIN MUTUKU** <[kelvinMutuku](https://github.com/kelvinMutuku)>
-* **Bereket Haile** <[](https://github.com/)>
-
+* **Bereket Haile** <[Bereket Haile](https://github.com/BereketHaile)>
