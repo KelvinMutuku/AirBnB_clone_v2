@@ -1,75 +1,57 @@
 #!/usr/bin/python3
-import os.path
-from datetime import datetime
-from fabric.api import env
-from fabric.api import local
-from fabric.api import put
-from fabric.api import run
+""" Creates and distributes an archive to web servers,
+using created function deploy and pack"""
+from fabric.api import *
+import os
+do_pack = __import__('1-pack_web_static').do_pack
+# do_deploy = __import__('2-do_deploy_web_static').do_deploy
 
-env.hosts = ['100.25.19.204', '54.157.159.85']
-
-
-def do_pack():
-    """Create a tar gzipped archive of the directory web_static."""
-    dt = datetime.utcnow()
-    file = "versions/web_static_{}{}{}{}{}{}.tgz".format(dt.year,
-                                                         dt.month,
-                                                         dt.day,
-                                                         dt.hour,
-                                                         dt.minute,
-                                                         dt.second)
-    if os.path.isdir("versions") is False:
-        if local("mkdir -p versions").failed is True:
-            return None
-    if local("tar -cvzf {} web_static".format(file)).failed is True:
-        return None
-    return file
-
-
-def do_deploy(archive_path):
-    """Distributes an archive to a web server.
-
-    Args:
-        archive_path (str): The path of the archive to distribute.
-    Returns:
-        If the file doesn't exist at archive_path or an error occurs - False.
-        Otherwise - True.
-    """
-    if os.path.isfile(archive_path) is False:
-        return False
-    file = archive_path.split("/")[-1]
-    name = file.split(".")[0]
-
-    if put(archive_path, "/tmp/{}".format(file)).failed is True:
-        return False
-    if run("rm -rf /data/web_static/releases/{}/".
-           format(name)).failed is True:
-        return False
-    if run("mkdir -p /data/web_static/releases/{}/".
-           format(name)).failed is True:
-        return False
-    if run("tar -xzf /tmp/{} -C /data/web_static/releases/{}/".
-           format(file, name)).failed is True:
-        return False
-    if run("rm /tmp/{}".format(file)).failed is True:
-        return False
-    if run("mv /data/web_static/releases/{}/web_static/* "
-           "/data/web_static/releases/{}/".format(name, name)).failed is True:
-        return False
-    if run("rm -rf /data/web_static/releases/{}/web_static".
-           format(name)).failed is True:
-        return False
-    if run("rm -rf /data/web_static/current").failed is True:
-        return False
-    if run("ln -s /data/web_static/releases/{}/ /data/web_static/current".
-           format(name)).failed is True:
-        return False
-    return True
+env.hosts = ['3.235.198.120', '3.239.50.204']
 
 
 def deploy():
-    """Create and distribute an archive to a web server."""
-    file = do_pack()
-    if file is None:
+    """Pack and deploy all file """
+    file_path = do_pack()
+    if not file_path:
         return False
-    return do_deploy(file)
+
+    run_cmd = do_deploy(file_path)
+    return run_cmd
+
+
+def do_deploy(archive_path):
+    """Archive distributor"""
+    try:
+        try:
+            if os.path.exists(archive_path):
+                arc_tgz = archive_path.split("/")
+                arg_save = arc_tgz[1]
+                arc_tgz = arc_tgz[1].split('.')
+                arc_tgz = arc_tgz[0]
+
+                """Upload archive to the server"""
+                put(archive_path, '/tmp')
+
+                """Save folder paths in variables"""
+                uncomp_fold = '/data/web_static/releases/{}'.format(arc_tgz)
+                tmp_location = '/tmp/{}'.format(arg_save)
+
+                """Run remote commands on the server"""
+                run('mkdir -p {}'.format(uncomp_fold))
+                run('tar -xvzf {} -C {}'.format(tmp_location, uncomp_fold))
+                run('rm {}'.format(tmp_location))
+                run('mv {}/web_static/* {}'.format(uncomp_fold, uncomp_fold))
+                run('rm -rf {}/web_static'.format(uncomp_fold))
+                run('rm -rf /data/web_static/current')
+                run('ln -sf {} /data/web_static/current'.format(uncomp_fold))
+                run('sudo service nginx restart')
+                return True
+            else:
+                print('File does not exist')
+                return False
+        except Exception as err:
+            print(err)
+            return False
+    except Exception:
+        print('Error')
+        return False
