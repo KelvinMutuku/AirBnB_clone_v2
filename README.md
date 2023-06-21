@@ -319,4 +319,4 @@ $ python3 unittest -m tests/test_console.py
 
 ## Authors :black_nib:
 * **KELVIN MUTUKU** <[kelvinMutuku](https://github.com/kelvinMutuku)>
-* **Bereket Haile** <[Bereket Haile](https://github.com/BereketHaile)>
+* **Bereket Haile** <[bekiassefa](https://github.com/bekiassefa)>
