@@ -6,7 +6,7 @@ from operator import length_hint
 from fabric.api import run, local, cd, env
 import os
 
-# env.hosts = ['3.235.198.120', '3.239.50.204']
+# env.hosts = ['54.197.21.90', '54.237.39.145']
 
 
 def do_clean(number=0):
